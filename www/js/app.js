@@ -34,19 +34,28 @@ angular.module('starter', ['ionic', 'ngCordova'])
     $urlRouterProvider.otherwise("/");
 
   })
-  .controller('MapCtrl', function ($scope, $state, $cordovaGeolocation, $ionicModal) {
+  .controller('MapCtrl', function ($scope, $state, $cordovaGeolocation, $ionicModal, $http) {
     var options = {timeout: 10000, enableHighAccuracy: true};
+
+    //Disse bruges til at sende med, når vi registrerer.
+    var myLat;
+    var myLng;
 
     //Getting current location with callback.
     $cordovaGeolocation.getCurrentPosition(options).then(function (position) {
 
       var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 
+      myLat = position.coords.latitude;
+      myLng = position.coords.longitude;
+
       var mapOptions = {
         center: latLng,
         zoom: 15,
         mapTypeId: google.maps.MapTypeId.ROADMAP
       };
+      console.log("myLat--- " + myLat);
+      console.log("myLng--- " + myLng);
 
       $scope.map = new google.maps.Map(document.getElementById("map"), mapOptions);
 
@@ -105,15 +114,53 @@ angular.module('starter', ['ionic', 'ngCordova'])
     $scope.registerUser = function (user) {
       $scope.modal.hide();
       user.loc = [];
-      user.loc.push(myLatlng.lng()); //Important, longitude first
-      user.loc.push(myLatlng.lat());
+      user.loc.push(myLng); //Important, longitude first
+      user.loc.push(myLat);
       console.log(JSON.stringify(user));
 
       $http({
         method: "POST",
         url: "http://ionicbackend-plaul.rhcloud.com/api/friends/register/" + user.distance,
         data: user
-      }).then(req, res)
-      alert("SUCCESS!")
-    }
+      }).then(function (res, req) {
+        console.log(res);
+
+        if (res.data.length >= 1) {
+          console.log("USERS SIZE: " + res.data.length);
+
+          for (var i = 0; i < res.data.length; i++) {
+
+            google.maps.event.addListenerOnce($scope.map, 'idle', function () {
+
+              var latLng = new google.maps.LatLng(parseFloat(res.data[i].loc[0]), parseFloat(res.data[i].loc[1]));
+
+              //Create a marker in the users LatLng
+              var marker = new google.maps.Marker({
+                map: $scope.map,
+                animation: google.maps.Animation.DROP,
+                icon: new google.maps.MarkerImage("http://maps.google.com/mapfiles/ms/icons/" + "red.png"),
+                position: latLng
+              });
+
+              //adds popup with location info. (the "content")
+              var infoWindow = new google.maps.InfoWindow({
+                content: res.data[i].userName
+              });
+
+              //Shows the stuff when the marker is clicked
+              google.maps.event.addListener(marker, 'click', function () {
+                infoWindow.open($scope.map, marker);
+              });
+
+            });
+          }
+        } else {
+          alert("No friends found in selected distence!")
+        }
+
+
+      })
+    };
+
+
   });
