@@ -49,6 +49,8 @@ angular.module('starter', ['ionic', 'ngCordova'])
       myLat = position.coords.latitude;
       myLng = position.coords.longitude;
 
+      console.log("myLat:" + myLat); //DET STØRSTE TAL (1)
+
       var mapOptions = {
         center: latLng,
         zoom: 15,
@@ -132,7 +134,7 @@ angular.module('starter', ['ionic', 'ngCordova'])
 
             google.maps.event.addListenerOnce($scope.map, 'idle', function () {
 
-              var latLng = new google.maps.LatLng(parseFloat(res.data[i].loc[0]), parseFloat(res.data[i].loc[1]));
+              var latLng = new google.maps.LatLng(parseFloat(res.data[i].loc[1]), parseFloat(res.data[i].loc[0]));
 
               //Create a marker in the users LatLng
               var marker = new google.maps.Marker({
@@ -152,6 +154,8 @@ angular.module('starter', ['ionic', 'ngCordova'])
                 infoWindow.open($scope.map, marker);
               });
 
+            }, function (error) {
+              console.log("Could not get location");
             });
           }
         } else {
