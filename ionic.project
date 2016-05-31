@@ -9,4 +9,10 @@
     "www/**/*",
     "!www/lib/**/*"
   ]
+  "proxies": [
+      {
+        "path":  "/api",
+        "proxyUrl": "http://ionicbackend-plaul.rhcloud.com/api"
+      }
+    ],
 }
